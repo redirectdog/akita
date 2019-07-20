@@ -2,10 +2,10 @@
 enum Error {
     NoTasks,
     FailedToFetchTask(postgres::Error),
-    ClientError(acme_client::error::Error),
+    Client(acme_client::error::Error),
     MissingChallenge,
     FailedToSaveChallenge(postgres::Error),
-    CryptoError(acme_client::openssl::error::ErrorStack),
+    Crypto(acme_client::openssl::error::ErrorStack),
     FailedToSaveCert(postgres::Error),
 }
 
@@ -52,7 +52,7 @@ fn main() {
         let result = task_stmt.query(&[])
             .map_err(Error::FailedToFetchTask)
             .and_then(|rows| {
-                if rows.len() > 0 {
+                if !rows.is_empty() {
                     let row = rows.get(0);
                     let id: i32 = row.get(0);
                     let host: String = row.get(1);
@@ -66,7 +66,7 @@ fn main() {
             })
         .and_then(|(id, host)| {
             acme_account.authorization(&host)
-                .map_err(Error::ClientError)
+                .map_err(Error::Client)
                 .and_then(|authorization| {
                     let challenge = authorization.get_http_challenge().ok_or(Error::MissingChallenge)?;
                     let token = challenge.token();
@@ -77,18 +77,18 @@ fn main() {
                         .and_then(|_| {
                             println!("validating...");
                             challenge.validate()
-                                .map_err(Error::ClientError)
+                                .map_err(Error::Client)
                         })
                 })
             .and_then(|_| {
                 acme_account.certificate_signer(&[&host])
                     .sign_certificate()
-                    .map_err(Error::ClientError)
+                    .map_err(Error::Client)
             })
             .and_then(|result| {
-                let privkey = result.pkey().private_key_to_pem_pkcs8().map_err(Error::CryptoError)?;
+                let privkey = result.pkey().private_key_to_pem_pkcs8().map_err(Error::Crypto)?;
 
-                let mut cert = result.cert().to_pem().map_err(Error::CryptoError)?;
+                let mut cert = result.cert().to_pem().map_err(Error::Crypto)?;
                 cert.extend_from_slice(&intermediate_cert);
 
                 update_cert_stmt.execute(&[&privkey, &cert, &id])
