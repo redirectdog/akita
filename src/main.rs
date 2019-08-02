@@ -12,7 +12,7 @@ enum Error {
 fn main() {
     let db = postgres::Connection::connect(std::env::var("DATABASE_URL").expect("Missing DATABASE_URL"), postgres::TlsMode::None).expect("Failed to connect to database");
 
-    let task_stmt = db.prepare("SELECT id, host FROM redirects WHERE allow_tls=TRUE AND acme_failed=FALSE AND tls_cert IS NULL LIMIT 1").expect("Failed to prepare statement");
+    let task_stmt = db.prepare("SELECT id, host FROM redirects WHERE record_confirmed=TRUE AND acme_failed=FALSE AND tls_cert IS NULL LIMIT 1").expect("Failed to prepare statement");
     let update_challenge_stmt = db.prepare("UPDATE redirects SET acme_token=$1, acme_key_authorization=$2 WHERE id=$3").expect("Failed to prepare statement");
     let report_error_stmt = db.prepare("UPDATE redirects SET acme_failed=TRUE WHERE id=$1").expect("Failed to prepare statement");
     let update_cert_stmt = db.prepare("UPDATE redirects SET tls_privkey=$1, tls_cert=$2, tls_renewed_at=localtimestamp WHERE id=$3").expect("Failed to prepare statement");
