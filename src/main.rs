@@ -96,7 +96,7 @@ fn main() {
                     })
                     .and_then(|cert_order| cert_order.download_cert().map_err(Error::Client))
                     .and_then(|result| {
-                        let privkey = result.private_key();
+                        let privkey = result.private_key().as_bytes();
 
                         let cert = result.certificate().as_bytes();
 
