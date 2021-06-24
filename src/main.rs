@@ -98,7 +98,7 @@ fn main() {
                     .and_then(|result| {
                         let privkey = result.private_key();
 
-                        let cert = result.certificate();
+                        let cert = result.certificate().as_bytes();
 
                         update_cert_stmt
                             .execute(&[&privkey, &cert, &id])
