@@ -18,7 +18,7 @@ fn main() {
     )
     .expect("Failed to connect to database");
 
-    let task_stmt = db.prepare("SELECT id, host FROM redirects WHERE record_confirmed=TRUE AND acme_failed=FALSE AND tls_cert IS NULL LIMIT 1").expect("Failed to prepare statement");
+    let task_stmt = db.prepare("SELECT id, host FROM redirects WHERE record_confirmed=TRUE AND acme_failed=FALSE AND (tls_cert IS NULL OR tls_renewed_at + INTERVAL '2 MONTHS' < localtimestamp) LIMIT 1").expect("Failed to prepare statement");
     let update_challenge_stmt = db
         .prepare("UPDATE redirects SET acme_token=$1, acme_key_authorization=$2 WHERE id=$3")
         .expect("Failed to prepare statement");
