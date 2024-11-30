@@ -42,6 +42,8 @@ fn main() {
         .and_then(|directory| directory.register_account(vec![format!("mailto:{}", contact_email)]))
         .expect("Failed to register with ACME");
 
+    println!("registered");
+
     loop {
         let result = task_stmt
             .query(&[])
